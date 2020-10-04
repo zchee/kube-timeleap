@@ -1,7 +1,8 @@
 // Copyright 2020 The kube-timeleap Authors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-// Package v1alpha1 contains API Schema definitions for the timeleap v1alpha1 API group
+// Package v1alpha1 contains API Schema definitions for the timeleap v1alpha1 API group.
+
 // +kubebuilder:object:generate=true
 // +groupName=timeleap.x-k8s.io
 package v1alpha1
