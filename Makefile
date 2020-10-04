@@ -1,102 +1,152 @@
+-include Makefile.local
 
-# Image URL to use all building/pushing image targets
-IMG ?= controller:latest
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
+GOBIN=${CURDIR}/bin
+GO_PATH ?= $(shell go env GOPATH)
+GO_OS ?= $(shell go env GOOS)
+GO_ARCH ?= $(shell go env GOARCH)
+
+PKG=$(subst $(GO_PATH)/src/,,$(CURDIR))
+GO?=go
+GO_PKGS=$(shell go list ./... | grep -v -e '.pb.go')
+GO_PKGS_DIR=$(shell go list -f='{{ if or .GoFiles .CgoFiles }}{{ .Dir }}{{ end }}' ./... | grep -v -e '.pb.go' -e 'zz_generated.*.go')
+TOOLS_DIR=${CURDIR}/hack/tools
+TOOLS_GOBIN=${TOOLS_DIR}/bin
+CONTROLLER_GEN=${TOOLS_GOBIN}/controller-gen
+KUSTOMIZE=${TOOLS_GOBIN}/kustomize
+
+IMG ?= gcr.io/containerz/kube-timeleap/controller:latest
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
+# ----------------------------------------------------------------------------
+# defines
+
+define target
+@printf "+ \\x1b[1;32m$(patsubst ,$@,$(1))\\x1b[0m\\n" >&2
+endef
+
+# ----------------------------------------------------------------------------
+# target
 
 all: manager
 
-# Run tests
+mod:
+	$(call target)
+	@rm -f go.sum
+	@${GO} mod tidy
+	@${GO} mod vendor
+
+##@ test
+
+fmt: gofumpt gofumports
+fmt:  ## Run go fmt against code
+	$(call target)
+	@-rm -rf ${TOOLS_DIR}/vendor
+	@${TOOLS_GOBIN}/gofumpt -s -w -extra ${GO_PKGS_DIR}
+	@${TOOLS_GOBIN}/gofumports -w -local=${PKG} ${GO_PKGS_DIR}
+
+vet:  # Run go vet against code
+	$(call target)
+	@${GO} vet ./...
+
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+test:  ## Run tests
 test: generate fmt vet manifests
-	mkdir -p ${ENVTEST_ASSETS_DIR}
+	$(call target)
+	@mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); ${GO} test -v -race -coverprofile cover.out ./...
 
-# Build manager binary
-manager: generate fmt vet
-	go build -o bin/manager main.go
+##@ build, run
 
-# Run against the configured Kubernetes cluster in ~/.kube/config
+manager: generate manifests fmt vet
+manager:  ## Build manager binary
+	$(call target)
+	@${GO} build -o bin/manager main.go
+
 run: generate fmt vet manifests
-	go run ./main.go
+run:  ## Run against the configured Kubernetes cluster in ~/.kube/config
+	$(call target)
+	@${GO} run ./main.go
 
-# Install CRDs into a cluster
+generate: mod controller-gen
+generate:  ## Generate code
+	$(call target)
+	@${CONTROLLER_GEN} object:headerFile="hack/boilerplate/boilerplate.go.txt" paths="./..."
+
+manifests: mod controller-gen
+manifests:  ## Generate manifests e.g. CRD, RBAC etc.
+	$(call target)
+	@$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+
+##@ deploy
+
 install: manifests kustomize
+install:  ## Install CRDs into a cluster
+	$(call target)
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
-# Uninstall CRDs from a cluster
 uninstall: manifests kustomize
+uninstall:  ## Uninstall CRDs from a cluster
+	$(call target)
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
-# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests kustomize
+deploy:  ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+	$(call target)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
-# UnDeploy controller from the configured Kubernetes cluster in ~/.kube/config
-undeploy:
+undeploy:  ## UnDeploy controller from the configured Kubernetes cluster in ~/.kube/config
+	$(call target)
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
-# Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
-# Run go fmt against code
-fmt:
-	go fmt ./...
+##@ tools
 
-# Run go vet against code
-vet:
-	go vet ./...
+${TOOLS_GOBIN}/%:
+	@pushd ${TOOLS_DIR} > /dev/null 2>&1; \
+		${GO} mod edit -require=sigs.k8s.io/kind@master -require=sigs.k8s.io/kubebuilder@master > /dev/null 2>&1 || true; \
+		rm -f go.sum; ${GO} mod tidy -v
+	@pushd ${TOOLS_DIR} > /dev/null 2>&1; \
+		./install-tools $*
+	@pushd ${TOOLS_DIR} > /dev/null 2>&1; \
+		${GO} mod edit -require=sigs.k8s.io/kind@master -require=sigs.k8s.io/kubebuilder@master
 
-# Generate code
-generate: controller-gen
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+.PHONY: tools
+tools: ${TOOLS_GOBIN}/''
+tools:  ## install tools
 
-# Build the docker image
-docker-build: test
-	docker build . -t ${IMG}
+tools/%:
+	$(call target)
+	@${MAKE} ${TOOLS_GOBIN}/$* > /dev/null
 
-# Push the docker image
-docker-push:
-	docker push ${IMG}
+gofumpt: ${TOOLS_GOBIN}/gofumpt
+gofumports: ${TOOLS_GOBIN}/gofumports
+controller-gen: ${TOOLS_GOBIN}/controller-gen
+kustomize: ${TOOLS_GOBIN}/kustomize
 
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
 
-kustomize:
-ifeq (, $(shell which kustomize))
-	@{ \
-	set -e ;\
-	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
-	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
-	}
-KUSTOMIZE=$(GOBIN)/kustomize
-else
-KUSTOMIZE=$(shell which kustomize)
-endif
+##@ container
+
+docker/build: test
+docker/build:  ## Build the docker image
+	$(call target)
+	docker image build . -t ${IMG}
+
+docker/push:  ## Push the docker image
+	$(call target)
+	docker image push ${IMG}
+
+.PHONY: clean
+clean:  ## Clean workspace
+	$(call target)
+	-@rm -rf ./bin ./vendor ${TOOLS_DIR}/bin ${TOOLS_DIR}/vendor
+
+.PHONY: help
+help:  ## Show make target help.
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[33m<target>\033[0m\n"} /^[a-zA-Z_0-9\/_-]+:.*?##/ { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+.PHONY: env/%
+env/%:  ## Print the value of MAKEFILE_VARIABLE. Use `make env/MAKEFILE_VARIABLE`.
+	@echo $($*)
