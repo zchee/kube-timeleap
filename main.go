@@ -62,6 +62,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "TimeLeap")
 		os.Exit(1)
 	}
+	if err = (&timeleapv1alpha1.TimeLeap{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "TimeLeap")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
