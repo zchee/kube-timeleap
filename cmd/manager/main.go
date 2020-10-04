@@ -11,7 +11,6 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // for gcp auth provider
-	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	zapf "sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -21,6 +20,7 @@ import (
 	injectorv1alpha1 "github.com/zchee/kube-timeleap/apis/injector/v1alpha1"
 	timeleapv1alpha1 "github.com/zchee/kube-timeleap/apis/timeleap/v1alpha1"
 	timeleapcontrollers "github.com/zchee/kube-timeleap/controllers/timeleap"
+	"github.com/zchee/kube-timeleap/pkg/signalctx"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -91,7 +91,9 @@ func main() {
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+
+	ctx := signalctx.NewContext()
+	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
