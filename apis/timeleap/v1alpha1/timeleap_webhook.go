@@ -21,7 +21,7 @@ func (r *TimeLeap) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=true,failurePolicy=fail,groups=timeleap.x-k8s.io,resources=timeleaps,verbs=create;update,versions=v1alpha1,name=mtimeleap.kb.io
+// +kubebuilder:webhook:webhookVersions=v1beta1,path=/mutate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=true,failurePolicy=fail,matchPolicy=Equivalent,groups=timeleap.x-k8s.io,resources=timeleaps,verbs=create;update,versions=v1alpha1,name=mtimeleap.kb.io,sideEffects=NoneOnDryRun
 
 var _ webhook.Defaulter = &TimeLeap{}
 
@@ -33,7 +33,7 @@ func (r *TimeLeap) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// +kubebuilder:webhook:verbs=create;update,path=/validate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=false,failurePolicy=fail,groups=timeleap.x-k8s.io,resources=timeleaps,versions=v1alpha1,name=vtimeleap.kb.io
+// +kubebuilder:webhook:webhookVersions=v1beta1,verbs=create;update,path=/validate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=timeleap.x-k8s.io,resources=timeleaps,versions=v1alpha1,name=vtimeleap.kb.io,sideEffects=None
 
 var _ webhook.Validator = &TimeLeap{}
 
