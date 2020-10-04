@@ -46,7 +46,7 @@ fmt:  ## Run go fmt against code
 
 vet:  # Run go vet against code
 	$(call target)
-	@${GO} vet ./...
+	@GOOS=linux ${GO} vet $(shell GOOS=linux go list ./... | grep -v 'pkg/vdso')
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test:  ## Run tests
