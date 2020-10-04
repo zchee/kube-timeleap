@@ -52,6 +52,11 @@ const (
 	flagEnableLeaderElectioUsage = "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager."
 )
 
+const (
+	managerPort      = 9443
+	leaderElectionID = "timeleap.x-k8s.io"
+)
+
 func main() {
 	flag.StringVar(&flagMetricsAddr, flagMetricsAddrName, flagMetricsAddrValue, flagMetricsAddrUsage)
 	flag.BoolVar(&flagEnableLeaderElection, flagEnableLeaderElectionName, false, flagEnableLeaderElectioUsage)
@@ -69,9 +74,9 @@ func main() {
 	mgr, err := manager.New(crconfig.GetConfigOrDie(), manager.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: flagMetricsAddr,
-		Port:               9443,
+		Port:               managerPort,
 		LeaderElection:     flagEnableLeaderElection,
-		LeaderElectionID:   "timeleap.x-k8s.io",
+		LeaderElectionID:   leaderElectionID,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
