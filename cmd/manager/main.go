@@ -9,19 +9,21 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	kubescheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // for gcp auth provider
-	ctrlconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
+	crconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	zapf "sigs.k8s.io/controller-runtime/pkg/log/zap"
-	ctrlmanager "sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
+	// +kubebuilder:scaffold:imports
 	injectorv1alpha1 "github.com/zchee/kube-timeleap/apis/injector/v1alpha1"
 	timeleapv1alpha1 "github.com/zchee/kube-timeleap/apis/timeleap/v1alpha1"
 	timeleapcontrollers "github.com/zchee/kube-timeleap/controllers/timeleap"
+
+	"github.com/zchee/kube-timeleap/pkg/config"
 	"github.com/zchee/kube-timeleap/pkg/signalctx"
-	// +kubebuilder:scaffold:imports
 )
 
 var (
@@ -30,7 +32,7 @@ var (
 )
 
 func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(kubescheme.AddToScheme(scheme))
 
 	utilruntime.Must(timeleapv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
@@ -43,6 +45,7 @@ var (
 
 const (
 	flagMetricsAddrName  = "metrics-addr"
+	flagMetricsAddrValue = "localhost:8080"
 	flagMetricsAddrUsage = "The address the metric endpoint binds to."
 
 	flagEnableLeaderElectionName = "enable-leader-election"
@@ -50,13 +53,23 @@ const (
 )
 
 func main() {
-	flag.StringVar(&flagMetricsAddr, flagMetricsAddrName, ":8080", flagMetricsAddrUsage)
+	flag.StringVar(&flagMetricsAddr, flagMetricsAddrName, flagMetricsAddrValue, flagMetricsAddrUsage)
 	flag.BoolVar(&flagEnableLeaderElection, flagEnableLeaderElectionName, false, flagEnableLeaderElectioUsage)
 	flag.Parse()
 
-	logf.SetLogger(zapf.New(zapf.UseDevMode(true)))
+	env, err := config.Process()
+	if err != nil {
+		setupLog.Error(err, "unable to get config")
+		os.Exit(1)
+	}
 
-	mgr, err := ctrlmanager.New(ctrlconfig.GetConfigOrDie(), ctrlmanager.Options{
+	zapfOpts := []zapf.Opts{}
+	if env.Debug {
+		zapfOpts = append(zapfOpts, zapf.UseDevMode(true))
+	}
+	logf.SetLogger(zapf.New(zapfOpts...))
+
+	mgr, err := manager.New(crconfig.GetConfigOrDie(), manager.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: flagMetricsAddr,
 		Port:               9443,
@@ -68,7 +81,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&timeleapcontrollers.TimeLeapReconciler{
+	if err := (&timeleapcontrollers.TimeLeapReconciler{
 		Client: mgr.GetClient(),
 		Reader: mgr.GetAPIReader(),
 		Log:    logf.Log.WithName("controllers").WithName("timeleap").WithName("TimeLeap"),
@@ -77,19 +90,21 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "TimeLeap")
 		os.Exit(1)
 	}
-	if err = (&timeleapv1alpha1.TimeLeap{}).SetupWebhookWithManager(mgr); err != nil {
+	if err := (&timeleapv1alpha1.TimeLeap{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "TimeLeap")
 		os.Exit(1)
 	}
-	podInjectorWebhook := &admission.Webhook{
+	// +kubebuilder:scaffold:builder
+
+	podInjector := &admission.Webhook{
 		Handler: &injectorv1alpha1.Pod{
 			Client: mgr.GetClient(),
 		},
 	}
-	podInjectorWebhook.InjectLogger(logf.Log.WithName("injector").WithName("Pod"))
+	podInjector.InjectLogger(logf.Log.WithName("injector").WithName("Pod"))
+
 	webhookServer := mgr.GetWebhookServer()
-	webhookServer.Register(injectorv1alpha1.Path, podInjectorWebhook)
-	// +kubebuilder:scaffold:builder
+	webhookServer.Register(injectorv1alpha1.Path, podInjector)
 
 	setupLog.Info("starting manager")
 
