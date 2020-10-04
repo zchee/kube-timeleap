@@ -1,0 +1,56 @@
+
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: mutating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-timeleap-x-k8s-io-v1alpha1-timeleap
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: mtimeleap.kb.io
+  rules:
+  - apiGroups:
+    - timeleap.x-k8s.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - timeleaps
+  sideEffects: NoneOnDryRun
+
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-timeleap-x-k8s-io-v1alpha1-timeleap
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: vtimeleap.kb.io
+  rules:
+  - apiGroups:
+    - timeleap.x-k8s.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - timeleaps
+  sideEffects: None
