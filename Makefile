@@ -61,12 +61,12 @@ test: generate fmt vet manifests
 manager: generate manifests fmt vet
 manager:  ## Build manager binary
 	$(call target)
-	@${GO} build -o bin/manager main.go
+	@${GO} build -o bin/manager cmd/manager/main.go
 
 run: generate fmt vet manifests
 run:  ## Run against the configured Kubernetes cluster in ~/.kube/config
 	$(call target)
-	@${GO} run ./main.go
+	@${GO} run ./cmd/manager/main.go
 
 generate: mod controller-gen
 generate:  ## Generate code
