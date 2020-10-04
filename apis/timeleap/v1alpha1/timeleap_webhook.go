@@ -13,31 +13,35 @@ import (
 // log is for logging in this package.
 var timeleaplog = logf.Log.WithName("timeleap-resource")
 
+// SetupWebhookWithManager setup TimeLeap webhook with manager.
 func (r *TimeLeap) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
 }
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 // +kubebuilder:webhook:webhookVersions=v1beta1,path=/mutate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=true,failurePolicy=fail,matchPolicy=Equivalent,groups=timeleap.x-k8s.io,resources=timeleaps,verbs=create;update,versions=v1alpha1,name=mtimeleap.kb.io,sideEffects=NoneOnDryRun
 
-var _ webhook.Defaulter = &TimeLeap{}
+// compile time check whether the TimeLeap implements webhook.Defaulter interface.
+var _ webhook.Defaulter = (*TimeLeap)(nil)
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
+// Default implements webhook.Defaulter.
+//
+// Default is a webhook will be registered for the type.
 func (r *TimeLeap) Default() {
 	timeleaplog.Info("default", "name", r.Name)
 
 	// TODO(user): fill in your defaulting logic.
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:webhookVersions=v1beta1,verbs=create;update,path=/validate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=timeleap.x-k8s.io,resources=timeleaps,versions=v1alpha1,name=vtimeleap.kb.io,sideEffects=None
 
-var _ webhook.Validator = &TimeLeap{}
+// compile time check whether the TimeLeap implements webhook.Validator interface.
+var _ webhook.Validator = (*TimeLeap)(nil)
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
+// ValidateCreate implements webhook.Validator.
+//
+// ValidateCreate is a webhook will be registered for the type.
 func (r *TimeLeap) ValidateCreate() error {
 	timeleaplog.Info("validate create", "name", r.Name)
 
@@ -45,7 +49,9 @@ func (r *TimeLeap) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
+// ValidateUpdate implements webhook.Validator.
+//
+// ValidateUpdate is a webhook will be registered for the type.
 func (r *TimeLeap) ValidateUpdate(old runtime.Object) error {
 	timeleaplog.Info("validate update", "name", r.Name)
 
@@ -53,7 +59,9 @@ func (r *TimeLeap) ValidateUpdate(old runtime.Object) error {
 	return nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
+// ValidateDelete implements webhook.Validator.
+//
+// ValidateDelete is a webhook will be registered for the type.
 func (r *TimeLeap) ValidateDelete() error {
 	timeleaplog.Info("validate delete", "name", r.Name)
 
