@@ -22,7 +22,7 @@ var _ logr.Logger = (*Logger)(nil)
 
 // NewLogger returns the new zapr implemented logr.Logger.
 func NewLogger(debug bool, zapfOpts ...zapf.Opts) *Logger {
-	opts := make([]zapf.Opts, 0, len(zapfOpts)+3) // +3 is JSONEncoder, Level and StacktraceLevel
+	opts := make([]zapf.Opts, 0, len(zapfOpts)+4) // +3 is JSONEncoder, Level, StacktraceLevel and RawZapOpts
 
 	lvl := zap.NewAtomicLevelAt(zapcore.InfoLevel)
 	stacktracelvl := zap.NewAtomicLevelAt(zapcore.ErrorLevel)
@@ -30,9 +30,7 @@ func NewLogger(debug bool, zapfOpts ...zapf.Opts) *Logger {
 
 	if debug {
 		opts = make([]zapf.Opts, 0, len(zapfOpts)+5) // lazy optimize
-		opts[0] = zapf.UseDevMode(true)
-		rawOpts = append(rawOpts, zap.Development())
-		opts[1] = zapf.RawZapOpts(rawOpts...)
+		opts = append(opts, zapf.UseDevMode(true))
 
 		lvl = zap.NewAtomicLevelAt(zapcore.DebugLevel)
 		stacktracelvl = zap.NewAtomicLevelAt(zapcore.WarnLevel)
@@ -42,6 +40,7 @@ func NewLogger(debug bool, zapfOpts ...zapf.Opts) *Logger {
 		zapf.JSONEncoder(EncoderConfigs()...),
 		zapf.Level(lvl),
 		zapf.StacktraceLevel(stacktracelvl),
+		zapf.RawZapOpts(rawOpts...),
 	)
 
 	// append zapfOpts variadic args to end of opts
