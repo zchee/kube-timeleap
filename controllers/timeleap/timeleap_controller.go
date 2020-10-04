@@ -17,6 +17,7 @@ import (
 // TimeLeapReconciler reconciles a TimeLeap object
 type TimeLeapReconciler struct {
 	client.Client
+	client.Reader
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 }

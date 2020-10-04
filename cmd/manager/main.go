@@ -70,6 +70,7 @@ func main() {
 
 	if err = (&timeleapcontrollers.TimeLeapReconciler{
 		Client: mgr.GetClient(),
+		Reader: mgr.GetAPIReader(),
 		Log:    logf.Log.WithName("controllers").WithName("timeleap").WithName("TimeLeap"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
