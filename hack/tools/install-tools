@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+info() { printf "\x1b[1;34m[INFO]\x1b[0m %s\\n" "$1" >&2; }
+
+CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+function install_tools() {
+  install_pkg=${1}
+  shift
+
+  for pkg in "$@"; do
+    if [ -n "${pkg##*$install_pkg*}" ]; then
+      continue
+    fi
+
+    info "Install ${pkg} ..."
+    case "${pkg}" in
+      *skaffold*)  # go get on tmp module workspace
+        CGO_ENABLED=1 go install -mod=mod -modfile=./skaffold/go.mod -ldflags=all='-s -w' "${pkg}"
+        ;;
+
+      *)
+        CGO_ENABLED=0 go install -mod=vendor -modfile=go.mod -ldflags=all='-s -w "-extldflags=-static"' "${pkg}"
+        if [[ "${pkg}" = *'kubebuilder'* ]]; then mv "${GOBIN}/cmd" "${GOBIN}/kubebuilder"; fi
+      ;;
+    esac
+  done
+}
+
+export GOBIN=${CWD}/bin
+mkdir -p "$GOBIN"
+
+GOPATH=$(go env GOPATH)
+export GOPATH
+
+go mod vendor -modcacherw
+# hack of case-insensitive import collision error
+grep -rl '"github.com/googleapis/gnostic/openapiv2"' "${CWD}/vendor" | xargs sed -i 's|openapiv2|OpenAPIv2|g'
+
+pushd "${CWD}" > /dev/null 2>&1
+
+go_flags=(-v)
+go_flags+=(-tags='osusergo,netgo,static,static_build')
+go_flags+=(-trimpath)
+go_flags+=(-gcflags=all=-trimpath="$GOPATH")
+go_flags+=(-asmflags=all=-trimpath="$GOPATH")
+go_flags+=(-installsuffix=netgo)
+export GOFLAGS=${go_flags[*]}
+
+install_tools "${1}" $(go list -f '{{ join .Imports " " }}' -mod=vendor -tags=tools -modfile=./go.mod ./tools.go)
+install_tools "${1}" $(go list -f '{{ join .Imports " " }}' -mod=mod -tags=tools.skaffold -modfile=./skaffold/go.mod ./skaffold/tools.skaffold.go)
