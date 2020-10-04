@@ -13,7 +13,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // for gcp auth provider
 	crconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	zapf "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
@@ -23,6 +22,7 @@ import (
 	timeleapcontrollers "github.com/zchee/kube-timeleap/controllers/timeleap"
 
 	"github.com/zchee/kube-timeleap/pkg/config"
+	"github.com/zchee/kube-timeleap/pkg/logging"
 	"github.com/zchee/kube-timeleap/pkg/signalctx"
 )
 
@@ -63,11 +63,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	zapfOpts := []zapf.Opts{}
-	if env.Debug {
-		zapfOpts = append(zapfOpts, zapf.UseDevMode(true))
-	}
-	logf.SetLogger(zapf.New(zapfOpts...))
+	logger := logging.NewLogger(env.Debug)
+	logf.SetLogger(logger)
 
 	mgr, err := manager.New(crconfig.GetConfigOrDie(), manager.Options{
 		Scheme:             scheme,
