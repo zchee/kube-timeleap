@@ -10,9 +10,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // for gcp auth provider
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	ctrlconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	zapf "sigs.k8s.io/controller-runtime/pkg/log/zap"
+	ctrlmanager "sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	injectorv1alpha1 "github.com/zchee/kube-timeleap/apis/injector/v1alpha1"
@@ -23,7 +26,7 @@ import (
 
 var (
 	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	setupLog = logf.Log.WithName("setup")
 )
 
 func init() {
@@ -33,23 +36,32 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
+var (
+	flagMetricsAddr          string
+	flagEnableLeaderElection bool
+)
+
+const (
+	flagMetricsAddrName  = "metrics-addr"
+	flagMetricsAddrUsage = "The address the metric endpoint binds to."
+
+	flagEnableLeaderElectionName = "enable-leader-election"
+	flagEnableLeaderElectioUsage = "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager."
+)
+
 func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
+	flag.StringVar(&flagMetricsAddr, flagMetricsAddrName, ":8080", flagMetricsAddrUsage)
+	flag.BoolVar(&flagEnableLeaderElection, flagEnableLeaderElectionName, false, flagEnableLeaderElectioUsage)
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	logf.SetLogger(zapf.New(zapf.UseDevMode(true)))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err := ctrlmanager.New(ctrlconfig.GetConfigOrDie(), ctrlmanager.Options{
 		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
+		MetricsBindAddress: flagMetricsAddr,
 		Port:               9443,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "fdf90871.x-k8s.io",
+		LeaderElection:     flagEnableLeaderElection,
+		LeaderElectionID:   "timeleap.x-k8s.io",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -58,7 +70,7 @@ func main() {
 
 	if err = (&timeleapcontrollers.TimeLeapReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("timeleap").WithName("TimeLeap"),
+		Log:    logf.Log.WithName("controllers").WithName("timeleap").WithName("TimeLeap"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TimeLeap")
@@ -73,7 +85,7 @@ func main() {
 			Client: mgr.GetClient(),
 		},
 	}
-	podInjectorWebhook.InjectLogger(ctrl.Log.WithName("injector").WithName("Pod"))
+	podInjectorWebhook.InjectLogger(logf.Log.WithName("injector").WithName("Pod"))
 	webhookServer := mgr.GetWebhookServer()
 	webhookServer.Register(injectorv1alpha1.Path, podInjectorWebhook)
 	// +kubebuilder:scaffold:builder
