@@ -1,0 +1,34 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - timeleap.x-k8s.io
+  resources:
+  - timeleaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - timeleap.x-k8s.io
+  resources:
+  - timeleaps/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - timeleap.x-k8s.io
+  resources:
+  - timeleaps/status
+  verbs:
+  - get
+  - patch
+  - update

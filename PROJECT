@@ -3,4 +3,8 @@ layout: go.kubebuilder.io/v3-alpha
 multigroup: true
 projectName: kube-timeleap
 repo: github.com/zchee/kube-timeleap
+resources:
+- group: timeleap
+  kind: TimeLeap
+  version: v1alpha1
 version: 3-alpha

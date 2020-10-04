@@ -1,0 +1,24 @@
+# permissions for end users to edit timeleaps.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: timeleap-editor-role
+rules:
+- apiGroups:
+  - timeleap.x-k8s.io
+  resources:
+  - timeleaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - timeleap.x-k8s.io
+  resources:
+  - timeleaps/status
+  verbs:
+  - get
