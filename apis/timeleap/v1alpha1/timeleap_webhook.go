@@ -20,7 +20,7 @@ func (r *TimeLeap) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// +kubebuilder:webhook:webhookVersions=v1beta1,path=/mutate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=true,failurePolicy=fail,matchPolicy=Equivalent,groups=timeleap.x-k8s.io,resources=timeleaps,verbs=create;update,versions=v1alpha1,name=mtimeleap.kb.io,sideEffects=NoneOnDryRun
+// +kubebuilder:webhook:webhookVersions=v1,path=/mutate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=true,failurePolicy=fail,matchPolicy=Equivalent,groups=timeleap.x-k8s.io,resources=timeleaps,verbs=create;update,versions=v1alpha1,name=mtimeleap.kb.io,sideEffects=NoneOnDryRun
 
 // compile time check whether the TimeLeap implements webhook.Defaulter interface.
 var _ webhook.Defaulter = (*TimeLeap)(nil)
@@ -34,7 +34,7 @@ func (r *TimeLeap) Default() {
 	// TODO(user): fill in your defaulting logic.
 }
 
-// +kubebuilder:webhook:webhookVersions=v1beta1,verbs=create;update,path=/validate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=timeleap.x-k8s.io,resources=timeleaps,versions=v1alpha1,name=vtimeleap.kb.io,sideEffects=None
+// +kubebuilder:webhook:webhookVersions=v1,verbs=create;update,path=/validate-timeleap-x-k8s-io-v1alpha1-timeleap,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=timeleap.x-k8s.io,resources=timeleaps,versions=v1alpha1,name=vtimeleap.kb.io,sideEffects=None
 
 // compile time check whether the TimeLeap implements webhook.Validator interface.
 var _ webhook.Validator = (*TimeLeap)(nil)

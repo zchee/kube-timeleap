@@ -21,7 +21,7 @@ const (
 
 var log = logf.Log.WithName("injector-resource")
 
-// +kubebuilder:webhook:webhookVersions=v1beta1,verbs=create;update,path=/inject-v1-pod,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups="",resources=pods,versions=v1,name=ipod.kb.io,sideEffects=NoneOnDryRun
+// +kubebuilder:webhook:webhookVersions=v1,verbs=create;update,path=/inject-v1-pod,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups="",resources=pods,versions=v1,name=ipod.kb.io,sideEffects=NoneOnDryRun
 
 // Pod represents a injecting pod.
 type Pod struct {
