@@ -13,7 +13,9 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
+	injectorv1alpha1 "github.com/zchee/kube-timeleap/apis/injector/v1alpha1"
 	timeleapv1alpha1 "github.com/zchee/kube-timeleap/apis/timeleap/v1alpha1"
 	timeleapcontrollers "github.com/zchee/kube-timeleap/controllers/timeleap"
 	// +kubebuilder:scaffold:imports
@@ -66,6 +68,14 @@ func main() {
 		setupLog.Error(err, "unable to create webhook", "webhook", "TimeLeap")
 		os.Exit(1)
 	}
+	podInjectorWebhook := &admission.Webhook{
+		Handler: &injectorv1alpha1.Pod{
+			Client: mgr.GetClient(),
+		},
+	}
+	podInjectorWebhook.InjectLogger(ctrl.Log.WithName("injector").WithName("Pod"))
+	webhookServer := mgr.GetWebhookServer()
+	webhookServer.Register(injectorv1alpha1.Path, podInjectorWebhook)
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

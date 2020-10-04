@@ -39,6 +39,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /inject-v1-pod
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: ipod.kb.io
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pods
+  sideEffects: NoneOnDryRun
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-timeleap-x-k8s-io-v1alpha1-timeleap
   failurePolicy: Fail
   matchPolicy: Equivalent
