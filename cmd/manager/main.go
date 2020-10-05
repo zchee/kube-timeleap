@@ -53,7 +53,8 @@ const (
 )
 
 const (
-	managerPort      = 9443
+	webhookHost      = "localhost"
+	webhookPort      = 9443
 	leaderElectionID = "timeleap.x-k8s.io"
 )
 
@@ -74,7 +75,8 @@ func main() {
 	mgr, err := manager.New(crconfig.GetConfigOrDie(), manager.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: flagMetricsAddr,
-		Port:               managerPort,
+		Host:               webhookHost,
+		Port:               webhookPort,
 		LeaderElection:     flagEnableLeaderElection,
 		LeaderElectionID:   leaderElectionID,
 	})
