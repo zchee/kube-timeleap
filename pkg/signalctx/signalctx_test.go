@@ -9,8 +9,6 @@ import (
 	"os/signal"
 	"testing"
 	"time"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 type testTask struct{}
@@ -49,57 +47,5 @@ func TestSetupSignalHandler(t *testing.T) {
 		if ok {
 			t.Fatal("context not stopped")
 		}
-	}
-}
-
-func Test_signalContext_Deadline(t *testing.T) {
-	tests := []struct {
-		name   string
-		wantOk bool
-	}{
-		{
-			name:   "Valid",
-			wantOk: false,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			ctx := &signalContext{}
-			gotDeadline, gotOk := ctx.Deadline()
-			if !gotDeadline.IsZero() {
-				t.Fatalf("signalContext.Deadline() gotDeadline not IsZero = %v", gotDeadline)
-			}
-			if gotOk != tt.wantOk {
-				t.Fatalf("signalContext.Deadline() gotOk = %v, want %v", gotOk, tt.wantOk)
-			}
-		})
-	}
-}
-
-func Test_signalContext_Value(t *testing.T) {
-	tests := []struct {
-		name string
-		args interface{}
-		want interface{}
-	}{
-		{
-			name: "Valid",
-			args: "test",
-			want: nil,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			ctx := &signalContext{}
-			if got := ctx.Value(tt.args); !cmp.Equal(got, tt.want) {
-				t.Fatalf("signalContext.Value(%v) should be return nil = %v, want %v", tt.args, got, tt.want)
-			}
-		})
 	}
 }
