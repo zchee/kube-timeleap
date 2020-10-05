@@ -1,6 +1,8 @@
 // Copyright 2020 The kube-timeleap Authors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+// +build linux
+
 package vdso
 
 import (
