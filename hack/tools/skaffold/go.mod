@@ -2,7 +2,7 @@ module github.com/kouzoh/kube-timeleap/hack/tools
 
 go 1.15
 
-require github.com/GoogleContainerTools/skaffold v1.15.0
+require github.com/GoogleContainerTools/skaffold master
 
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.3.4 // github.com/GoogleContainerTools/skaffold@v1.15.0

@@ -797,10 +797,10 @@ sigs.k8s.io/controller-runtime v0.4.0 h1:wATM6/m+3w8lj8FXNaO6Fs/rq/vqoOjO1Q116Z9
 sigs.k8s.io/controller-runtime v0.4.0/go.mod h1:ApC79lpY3PHW9xj/w9pj+lYkLgwAAUZwfXkME1Lajns=
 sigs.k8s.io/controller-tools v0.4.0 h1:9zIdrc6q9RKke8+DnVPVBVZ+cfF9L0TwM01cxNnklYo=
 sigs.k8s.io/controller-tools v0.4.0/go.mod h1:G9rHdZMVlBDocIxGkK3jHLWqcTMNvveypYJwrvYKjWU=
-sigs.k8s.io/kind v0.9.1-0.20201003190905-d7f948dd8c00 h1:GkV6RW50Hjl7vloZiozV9fglT0xrBte5bDYOaXrhUqA=
-sigs.k8s.io/kind v0.9.1-0.20201003190905-d7f948dd8c00/go.mod h1:fb32zUw7ewC47bPwLnwhf47wd/vADtv3c38KP7sjIlo=
-sigs.k8s.io/kubebuilder v1.0.9-0.20201002004319-72ca7ae27dd3 h1:8yrP33J//rRRlAJWOZR7HES7Hc2NLaKr8kmfnA1wGJc=
-sigs.k8s.io/kubebuilder v1.0.9-0.20201002004319-72ca7ae27dd3/go.mod h1:i4aBuK/562PegIx4HBjRo6iUdgY6A2aZLSrtDIikDBo=
+sigs.k8s.io/kind v0.9.1-0.20201020172208-237a0312edec h1:oGKnR3LLXuh90WigPh4Hxs/yCzN3CZbh7sUVmgVO2mw=
+sigs.k8s.io/kind v0.9.1-0.20201020172208-237a0312edec/go.mod h1:fb32zUw7ewC47bPwLnwhf47wd/vADtv3c38KP7sjIlo=
+sigs.k8s.io/kubebuilder v1.0.9-0.20201023161357-2d0d0b62c56a h1:3kZUGcJmoPYV+/Pu2/iCwPBzXzlFkyME4CSgtLO3hm8=
+sigs.k8s.io/kubebuilder v1.0.9-0.20201023161357-2d0d0b62c56a/go.mod h1:NatUhFMh/ci8gR+qETvZBIlZ4RTQoNa+9uei7okpgcY=
 sigs.k8s.io/kustomize v2.0.3+incompatible h1:JUufWFNlI44MdtnjUqVnvh29rR37PQFzPbLXqhyOyX0=
 sigs.k8s.io/kustomize v2.0.3+incompatible/go.mod h1:MkjgH3RdOWrievjo6c9T245dYlB5QeXV4WCbnt/PEpU=
 sigs.k8s.io/kustomize/api v0.6.2 h1:qZzMiyllvwBv6KQ8V3VsF452INpDW4eWEHOfyeKvkHw=
