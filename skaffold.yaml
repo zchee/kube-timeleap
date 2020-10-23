@@ -1,0 +1,42 @@
+apiVersion: skaffold/v2beta9
+kind: Config
+metadata:
+  name: kube-timeleap
+build:
+  artifacts:
+    - image: gcr.io/containerz/kube-timeleap/controller
+deploy:
+  kustomize:
+    paths:
+      - config/default
+profiles:
+  - name: certmanager
+    deploy:
+      kustomize:
+        paths:
+          - config/certmanager
+  - name: crd
+    deploy:
+      kustomize:
+        paths:
+          - config/crd
+  - name: manager
+    deploy:
+      kustomize:
+        paths:
+          - config/manager
+  - name: prometheus
+    deploy:
+      kustomize:
+        paths:
+          - config/prometheus
+  - name: rbac
+    deploy:
+      kustomize:
+        paths:
+          - config/rbac
+  - name: webhook
+    deploy:
+      kustomize:
+        paths:
+          - config/webhook
