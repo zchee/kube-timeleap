@@ -7,10 +7,10 @@ package ptrace
 
 import (
 	"github.com/go-logr/logr"
-	crlog "sigs.k8s.io/controller-runtime/pkg/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-var log = crlog.Log.WithName("ptrace")
+var log = logf.Log.WithName("ptrace")
 
 // RegisterLogger registers a logger on ptrace pkg.
 func RegisterLogger(logger logr.Logger) {
