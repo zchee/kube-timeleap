@@ -108,10 +108,15 @@ ${TOOLS_GOBIN}/%:
 	@pushd ${TOOLS_DIR} > /dev/null 2>&1; \
 		${GO} mod edit -require=sigs.k8s.io/kind@master -require=sigs.k8s.io/kubebuilder@master > /dev/null 2>&1 || true; \
 		rm -f go.sum; ${GO} mod tidy -v
+	@pushd ${TOOLS_DIR}/skaffold > /dev/null 2>&1; \
+		${GO} mod edit -require=github.com/GoogleContainerTools/skaffold@master > /dev/null 2>&1 || true; \
+		rm -f go.sum; ${GO} mod tidy -v
 	@pushd ${TOOLS_DIR} > /dev/null 2>&1; \
 		./install-tools $*
 	@pushd ${TOOLS_DIR} > /dev/null 2>&1; \
 		${GO} mod edit -require=sigs.k8s.io/kind@master -require=sigs.k8s.io/kubebuilder@master
+	@pushd ${TOOLS_DIR}/skaffold > /dev/null 2>&1; \
+		${GO} mod edit -require=github.com/GoogleContainerTools/skaffold@master
 
 .PHONY: tools
 tools: ${TOOLS_GOBIN}/''
